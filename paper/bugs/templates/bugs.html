@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Bugs Classifier</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='bulma.min.css') }}">
+    <style>
+      pre {
+        white-space: pre-wrap;       /* Since CSS 2.1 */
+        white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+        white-space: -pre-wrap;      /* Opera 4-6 */
+        white-space: -o-pre-wrap;    /* Opera 7 */
+        word-wrap: break-word;       /* Internet Explorer 5.5+ */
+      }
+    </style>
+  </head>
+  <body>
+    <section class="section">
+    <div class="columns">
+      <div class="column is-2">
+        <nav class="panel">
+          <p class="panel-heading">Bugs</p>
+          <p class="panel-tabs">
+            <a {% if show_all %}class="is-active"{% endif %} href="{{ url_for('index') }}?all=1">All</a>
+            <a {% if not show_all %}class="is-active"{%endif%} href="{{ url_for('index') }}?all=0">Unclassified</a>
+          </p>
+
+          {% for task in tasks %}
+          {% if bug and task['id'] == bug['id'] %}
+          <a class="panel-block is-active" href="{{ url_for('bug', bug_id=task['id']) }}?all={{ show_all }}">{{ task['id'] }}</a>
+          {% else %}
+          <a class="panel-block" href="{{ url_for('bug', bug_id=task['id']) }}?all={{ show_all }}">{{ task['id'] }}</a>
+          {% endif %}
+          {% endfor %}
+        </nav>
+      </div>
+      {% if bug %}
+      <div class="column">
+        <div class="card">
+          <header class="card-header">
+            <p class="card-header-title">
+              <a href="{{ bug['web_link'] }}">
+              #{{ bug['id'] }}: {{ bug['title'] }}
+              </a>
+            </p>
+          </header>
+          <div class="card-content">
+            <pre>{{ bug['description'] }}</pre>
+            {% for message in bug['messages'] %}
+            <div class="card">
+              <div class="card-content"><pre>{{ message|e }}</pre></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+      <div class="column is-3">
+        <form method="POST" action="{{ url_for('bug', bug_id=bug['id']) }}">
+          <div class="field">
+            <label class="label">Notes</label>
+            <div class="control">
+              <textarea class="textarea" name="notes">{{ bug['notes'] }}</textarea>
+            </div>
+          </div>
+          <div class="field">
+            <div class="control">
+              Keep:
+              <label class="radio"><input type="radio" value="yes" name="of_interest"
+                {% if bug['of_interest'] %}checked{% endif %}>Yes</label>
+              <label class="radio"><input type="radio" value="no" name="of_interest"
+                {% if not bug['of_interest'] %}checked{% endif %}>No</label>
+            </div>
+          </div>
+          <div class="control">
+            <input type="submit" class="button" value="Submit">
+          </div>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+    </section>
+  </body>
+</html>
