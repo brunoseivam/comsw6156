@@ -20,16 +20,15 @@
         <nav class="panel">
           <p class="panel-heading">Bugs</p>
           <p class="panel-tabs">
-            <a {% if show_all %}class="is-active"{% endif %} href="{{ url_for('index') }}?all=1">All</a>
-            <a {% if not show_all %}class="is-active"{%endif%} href="{{ url_for('index') }}?all=0">Unclassified</a>
+            {% for filter in filters %}
+            <a {% if filter==selected_filter %}class="is-active"{% endif %} 
+               href="{{ url_for('index') }}?filter={{ filter }}">{{ filter | capitalize }}</a>
+            {% endfor %}
           </p>
 
           {% for task in tasks %}
-          {% if bug and task['id'] == bug['id'] %}
-          <a class="panel-block is-active" href="{{ url_for('bug', bug_id=task['id']) }}?all={{ show_all }}">{{ task['id'] }}</a>
-          {% else %}
-          <a class="panel-block" href="{{ url_for('bug', bug_id=task['id']) }}?all={{ show_all }}">{{ task['id'] }}</a>
-          {% endif %}
+          <a class="panel-block {% if bug and task['id']==bug['id'] %}is-active{%endif%}" 
+             href="{{ url_for('bug', bug_id=task['id']) }}?filter={{ selected_filter }}">{{ task['id'] }}</a>
           {% endfor %}
         </nav>
       </div>

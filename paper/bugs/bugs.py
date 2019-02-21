@@ -103,21 +103,37 @@ def teardown_db(exception):
         db.close()
 
 def render(bug_id=None):
-    show_all = int(request.args.get('all', 0))
+    filters = ('all', 'unclassified', 'of interest')
+    filter = request.args.get('filter', filters[0])
     if bug_id is not None:
         bug = get_bug(bug_id)
     else:
         bug = None
 
-    analysed = get_db().execute('SELECT id FROM bug').fetchall()
-    analysed = set([a[0] for a in analysed])
-    if show_all:
+    analysed = set([
+        a[0] for a in get_db().execute(
+            'SELECT id FROM bug'
+        ).fetchall()
+    ])
+
+    of_interest = set([
+        oi[0] for oi in get_db().execute(
+            'SELECT id FROM bug WHERE of_interest=1'
+        ).fetchall()
+    ])
+
+    if filter == 'all':
         tasks = get_tasks()
-    else:
+    elif filter == 'unclassified':
         tasks = [t for t in get_tasks() if t['id'] not in analysed]
+    elif filter == 'classified':
+        tasks = [t for t in get_tasks() if t['id'] in analysed]
+    elif filter == 'of interest':
+        tasks = [t for t in get_tasks() if t['id'] in of_interest]
 
     return render_template('bugs.html',
-        tasks=tasks, bug=bug, show_all=show_all, notes=get_notes()
+        tasks=tasks, bug=bug, filters=filters, selected_filter=filter, 
+        notes=get_notes()
     )
 
 @app.route('/')
