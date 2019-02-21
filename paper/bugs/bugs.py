@@ -2,6 +2,7 @@ from flask import Flask, render_template, g, request
 from launchpadlib.launchpad import Launchpad
 import time
 import sqlite3
+import subprocess
 
 DATABASE = 'bugs.db'
 app = Flask(__name__)
@@ -63,9 +64,7 @@ def get_bug(bug_id):
                 ]
 
                 bug_dict['messages'] = bug_dict['messages'][1:]
-
                 bug_dict['bug'] = bug
-
                 gl['_bugs'][bug_id] = bug_dict
 
 
@@ -74,12 +73,15 @@ def get_bug(bug_id):
         return None
 
     row = get_db().execute(
-        'SELECT notes, of_interest FROM bug WHERE id=?',
+        'SELECT notes, of_interest, `commit` FROM bug WHERE id=?',
         (bug_id,)
     ).fetchone()
 
     if row is not None:
-        bug['notes'], bug['of_interest'] = row
+        bug['notes'], bug['of_interest'], bug['commit'] = row
+
+    if bug['commit'] is None:
+        bug['commit'] = ''
 
     return bug
 
@@ -103,7 +105,7 @@ def teardown_db(exception):
         db.close()
 
 def render(bug_id=None):
-    filters = ('all', 'unclassified', 'of interest')
+    filters = ('of interest', 'unclassified', 'all')
     filter = request.args.get('filter', filters[0])
     if bug_id is not None:
         bug = get_bug(bug_id)
@@ -131,9 +133,21 @@ def render(bug_id=None):
     elif filter == 'of interest':
         tasks = [t for t in get_tasks() if t['id'] in of_interest]
 
+    git_grep = subprocess.Popen([
+        '/usr/bin/git', '-C', '/home/bmartins/workspace/epics-base', 'log', '--oneline', '--grep='+str(bug['id'])
+    ], stdout=subprocess.PIPE)
+
+    stdout, _ = git_grep.communicate()
+    print(stdout)
+
+    if stdout:
+        commit_suggestion = stdout.split()[0].decode()
+    else:
+        commit_suggestion = ''
+
     return render_template('bugs.html',
         tasks=tasks, bug=bug, filters=filters, selected_filter=filter, 
-        notes=get_notes()
+        notes=get_notes(), commit_suggestion=commit_suggestion
     )
 
 @app.route('/')
@@ -145,6 +159,7 @@ def bug(bug_id):
     if request.method == 'POST':
         notes = request.form.get('notes', '')
         of_interest = request.form.get('of_interest', 'no').lower() == 'yes'
+        commit = request.form.get('commit')
 
         bug = get_bug(bug_id)
 
@@ -152,10 +167,10 @@ def bug(bug_id):
         print("INSERTING", notes, of_interest)
         print(db.execute('DELETE FROM bug WHERE id=?', (bug_id,)))
         print(db.execute("""INSERT INTO bug
-                        (id, web_link, date_created, date_last_updated, notes, of_interest)
-                      VALUES (?, ?, ?, ?, ?, ?) """,
+                        (id, web_link, date_created, date_last_updated, notes, of_interest, 'commit')
+                      VALUES (?, ?, ?, ?, ?, ?, ?) """,
                       (bug_id, bug['web_link'], bug['date_created'], bug['date_last_updated'],
-                      notes, of_interest)))
+                      notes, of_interest, commit)))
         db.commit()
 
     return render(bug_id)

@@ -21,13 +21,15 @@
           <p class="panel-heading">Bugs</p>
           <p class="panel-tabs">
             {% for filter in filters %}
-            <a {% if filter==selected_filter %}class="is-active"{% endif %} 
+            <a class="{% if filter==selected_filter %}is-active{% endif %}"
                href="{{ url_for('index') }}?filter={{ filter }}">{{ filter | capitalize }}</a>
             {% endfor %}
           </p>
 
           {% for task in tasks %}
-          <a class="panel-block {% if bug and task['id']==bug['id'] %}is-active{%endif%}" 
+          <a class="panel-block 
+                    {% if bug and task['id']==bug['id'] %}is-active{%endif%}
+                    {% if task['commit'] %}has-text-weight-bold{% endif %}"
              href="{{ url_for('bug', bug_id=task['id']) }}?filter={{ selected_filter }}">{{ task['id'] }}</a>
           {% endfor %}
         </nav>
@@ -59,6 +61,25 @@
             <div class="control">
               <textarea class="textarea" name="notes" id="notes">{{ bug['notes'] }}</textarea>
             </div>
+          </div>
+          <div class="field">
+            <label class="label">Commit</label>
+            <div class="control">
+              <input type="text" class="text" id="commit" name="commit" value="{{ bug['commit'] }}">
+              {% if commit_suggestion %}
+              <span class="tag">
+              <a href="#" onclick="document.getElementById('commit').value='{{ commit_suggestion }}'"> 
+                {{ commit_suggestion }} 
+              </a></span>
+              {% endif %}
+            </div>
+            {% if bug['commit'] %}
+            <div>
+              <a href="https://github.com/epics-base/epics-base/commit/{{ bug['commit'] }}">
+                Link
+              </a>
+            </div>
+            {% endif %}
           </div>
           <div class="field">
             <div class="control">
