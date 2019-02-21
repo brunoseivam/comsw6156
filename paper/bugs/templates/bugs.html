@@ -58,7 +58,7 @@
           <div class="field">
             <label class="label">Notes</label>
             <div class="control">
-              <textarea class="textarea" name="notes">{{ bug['notes'] }}</textarea>
+              <textarea class="textarea" name="notes" id="notes">{{ bug['notes'] }}</textarea>
             </div>
           </div>
           <div class="field">
@@ -72,6 +72,16 @@
           </div>
           <div class="control">
             <input type="submit" class="button" value="Submit">
+          </div>
+          <div class="menu">
+            <p class="menu-label">Common Notes</p>
+            <ul class="menu-list">
+              {% for cnt, note in notes %}
+              <li>
+                  <a href="#" onclick="document.getElementById('notes').value='{{ note }}'"> {{ note }} <span class="tag">{{ cnt }}</span></a>
+              </li>
+              {% endfor %}
+            </ul>
           </div>
         </form>
       </div>

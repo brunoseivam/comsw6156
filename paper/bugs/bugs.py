@@ -52,10 +52,10 @@ def get_bug(bug_id):
 
                 bug_dict = {
                     p: bug.lp_get_parameter(p)
-                    for p in ['id', 'title', 'heat', 
+                    for p in ['id', 'title', 'heat',
                         'web_link', 'description',
                         'date_created', 'date_last_updated']
-                } 
+                }
 
                 bug_dict['messages'] = [
                     m.lp_get_parameter('content')
@@ -74,7 +74,7 @@ def get_bug(bug_id):
         return None
 
     row = get_db().execute(
-        'SELECT notes, of_interest FROM bug WHERE id=?', 
+        'SELECT notes, of_interest FROM bug WHERE id=?',
         (bug_id,)
     ).fetchone()
 
@@ -82,6 +82,14 @@ def get_bug(bug_id):
         bug['notes'], bug['of_interest'] = row
 
     return bug
+
+def get_notes():
+    return get_db().execute("""
+        SELECT COUNT(notes) as cnt, notes
+        FROM bug
+        GROUP BY notes
+        ORDER BY cnt DESC
+    """).fetchall()
 
 def get_db():
     if '_database' not in g:
@@ -109,7 +117,7 @@ def render(bug_id=None):
         tasks = [t for t in get_tasks() if t['id'] not in analysed]
 
     return render_template('bugs.html',
-        tasks=tasks, bug=bug, show_all=show_all
+        tasks=tasks, bug=bug, show_all=show_all, notes=get_notes()
     )
 
 @app.route('/')
@@ -127,8 +135,8 @@ def bug(bug_id):
         db = get_db()
         print("INSERTING", notes, of_interest)
         print(db.execute('DELETE FROM bug WHERE id=?', (bug_id,)))
-        print(db.execute("""INSERT INTO bug 
-                        (id, web_link, date_created, date_last_updated, notes, of_interest) 
+        print(db.execute("""INSERT INTO bug
+                        (id, web_link, date_created, date_last_updated, notes, of_interest)
                       VALUES (?, ?, ?, ?, ?, ?) """,
                       (bug_id, bug['web_link'], bug['date_created'], bug['date_last_updated'],
                       notes, of_interest)))
