@@ -79,6 +79,8 @@ def get_bug(bug_id):
 
     if row is not None:
         bug['notes'], bug['of_interest'], bug['commit'] = row
+    else:
+        bug['notes'], bug['of_interest'], bug['commit'] = ('', 0, '')
 
     if bug['commit'] is None:
         bug['commit'] = ''
@@ -133,12 +135,15 @@ def render(bug_id=None):
     elif filter == 'of interest':
         tasks = [t for t in get_tasks() if t['id'] in of_interest]
 
-    git_grep = subprocess.Popen([
+    if bug:
+        git_grep = subprocess.Popen([
         '/usr/bin/git', '-C', '/home/bmartins/workspace/epics-base', 'log', '--oneline', '--grep='+str(bug['id'])
     ], stdout=subprocess.PIPE)
 
-    stdout, _ = git_grep.communicate()
-    print(stdout)
+        stdout, _ = git_grep.communicate()
+        print(stdout)
+    else:
+        stdout = ""
 
     if stdout:
         commit_suggestion = stdout.split()[0].decode()
@@ -146,7 +151,7 @@ def render(bug_id=None):
         commit_suggestion = ''
 
     return render_template('bugs.html',
-        tasks=tasks, bug=bug, filters=filters, selected_filter=filter, 
+        tasks=tasks, bug=bug, filters=filters, selected_filter=filter,
         notes=get_notes(), commit_suggestion=commit_suggestion
     )
 

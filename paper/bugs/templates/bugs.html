@@ -22,7 +22,10 @@
           <p class="panel-tabs">
             {% for filter in filters %}
             <a class="{% if filter==selected_filter %}is-active{% endif %}"
-               href="{{ url_for('index') }}?filter={{ filter }}">{{ filter | capitalize }}</a>
+               href="{{ url_for('index') }}?filter={{ filter }}">
+               {{ filter | capitalize }}
+               {% if filter==selected_filter %}({{ tasks | length}}){%endif%}
+            </a>
             {% endfor %}
           </p>
 
