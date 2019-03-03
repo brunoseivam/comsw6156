@@ -2,3 +2,7 @@ __pycache__/
 .vscode/
 video.mp4
 target/
+bug*-c
+bug*-cpp
+bug*-rust
+Cargo.lock
