@@ -1,0 +1,7 @@
+[package]
+name = "bug1369626"
+version = "0.1.0"
+authors = ["Bruno Martins"]
+edition = "2018"
+
+[dependencies]
